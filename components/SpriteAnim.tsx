@@ -1,18 +1,14 @@
 import { motion } from "framer-motion"
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 
 export default function SpriteAnim() {
-  const [isFlyEaten, setIsFlyEaten] = useState(false)
   const [coins, setCoins] = useState(0)
   const [pepeEatFrame, setPepeEatFrame] = useState(1)
   const redDotRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (isFlyEaten) {
-      setCoins((prevCoins) => prevCoins + 1)
-      setTimeout(() => setIsFlyEaten(false), 1000)
-    }
-  }, [isFlyEaten])
+  const handleFlyEaten = useCallback(() => {
+    setCoins((prevCoins) => prevCoins + 1)
+  }, [])
 
   return (
     <div>
@@ -20,12 +16,11 @@ export default function SpriteAnim() {
       <div className="relative z-10 overflow-hidden">
         <FlyLineAnim
           redDotRef={redDotRef}
-          setIsFlyEaten={setIsFlyEaten}
+          onFlyEaten={handleFlyEaten}
           pepeEatFrame={pepeEatFrame}
         />
         <PepeEatAnim
           redDotRef={redDotRef}
-          setIsFlyEaten={setIsFlyEaten}
           pepeEatFrame={pepeEatFrame}
           setPepeEatFrame={setPepeEatFrame}
         />
@@ -36,11 +31,11 @@ export default function SpriteAnim() {
 
 function FlyLineAnim({
   redDotRef,
-  setIsFlyEaten,
+  onFlyEaten,
   pepeEatFrame,
 }: {
   redDotRef: React.RefObject<HTMLDivElement>
-  setIsFlyEaten: (value: boolean) => void
+  onFlyEaten: () => void
   pepeEatFrame: number
 }) {
   const [, forceUpdate] = useState({})
@@ -62,14 +57,13 @@ function FlyLineAnim({
 
     fliesRef.current = fliesRef.current.map((fly) => ({
       ...fly,
-      x: fly.x + 0.1 * deltaTime,
+      x: fly.x + 0.2 * deltaTime,
     }))
 
     fliesRef.current = fliesRef.current.filter(
       (fly) => fly.x < 600 || fly.isEaten
     )
 
-    // Recycle eaten flies that have moved off-screen
     fliesRef.current = fliesRef.current.map((fly) =>
       fly.isEaten && fly.x >= 600 ? { ...fly, x: -100, isEaten: false } : fly
     )
@@ -108,7 +102,7 @@ function FlyLineAnim({
           x={fly.x}
           isEaten={fly.isEaten}
           redDotRef={redDotRef}
-          setIsFlyEaten={setIsFlyEaten}
+          onFlyEaten={onFlyEaten}
           pepeEatFrame={pepeEatFrame}
           setFlies={setFlies}
         />
@@ -122,7 +116,7 @@ function FlyAnim({
   x,
   isEaten,
   redDotRef,
-  setIsFlyEaten,
+  onFlyEaten,
   pepeEatFrame,
   setFlies,
 }: {
@@ -130,7 +124,7 @@ function FlyAnim({
   x: number
   isEaten: boolean
   redDotRef: React.RefObject<HTMLDivElement>
-  setIsFlyEaten: (value: boolean) => void
+  onFlyEaten: () => void
   pepeEatFrame: number
   setFlies: (
     updater: (
@@ -173,15 +167,15 @@ function FlyAnim({
             fly.id === id ? { ...fly, isEaten: true } : fly
           )
         )
-        setIsFlyEaten(true)
+        onFlyEaten()
         setIsAnimatingEaten(true)
-        setTimeout(() => setIsAnimatingEaten(false), 1000) // Match this with the animation duration
+        setTimeout(() => setIsAnimatingEaten(false), 1000)
       }
     }
-  }, [x, redDotRef, isEaten, pepeEatFrame, setIsFlyEaten, id, setFlies])
+  }, [x, redDotRef, isEaten, pepeEatFrame, onFlyEaten, id, setFlies])
 
   if (isEaten && !isAnimatingEaten) {
-    return null // Don't render the fly if it's eaten and not animating
+    return null
   }
 
   return (
@@ -190,7 +184,7 @@ function FlyAnim({
       className="absolute top-0 z-[100]"
       style={{
         transform: `translateX(${x}px)`,
-        transition: "transform 0.016s linear",
+        transition: "transform 0.008s linear",
         opacity: isAnimatingEaten ? 0 : 1,
         ...(isAnimatingEaten && {
           transform: `translateX(${x}px) translateY(200px)`,
@@ -205,12 +199,10 @@ function FlyAnim({
 
 function PepeEatAnim({
   redDotRef,
-  setIsFlyEaten,
   pepeEatFrame,
   setPepeEatFrame,
 }: {
   redDotRef: React.RefObject<HTMLDivElement>
-  setIsFlyEaten: (value: boolean) => void
   pepeEatFrame: number
   setPepeEatFrame: React.Dispatch<React.SetStateAction<number>>
 }) {
@@ -226,19 +218,16 @@ function PepeEatAnim({
             setIsAnimating(false)
             return 1
           } else {
-            if (prevFrame === 7 || prevFrame === 8) {
-              setIsFlyEaten(true)
-            }
             return prevFrame + 1
           }
         })
-      }, 40)
+      }, 30)
     }
 
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isAnimating, setIsFlyEaten, setPepeEatFrame])
+  }, [isAnimating, setPepeEatFrame])
 
   return (
     <div
@@ -252,7 +241,7 @@ function PepeEatAnim({
     >
       <div
         ref={redDotRef}
-        className="bg-red-500/20 absolute top-[48px] z-[20] left-[55%] translate-x-[-50%] h-[24px] w-[24px]"
+        className="bg-red-500/0 absolute top-[48px] z-[20] left-[55%] translate-x-[-50%] h-[24px] w-[24px]"
       ></div>
       <img
         src={`/pepe/pepeEat${pepeEatFrame}.png`}
