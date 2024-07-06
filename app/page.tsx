@@ -1,6 +1,8 @@
 "use client"
 
+import SpriteAnim from "@/components/SpriteAnim"
 import ArtemsButton from "@/components/artemsButton"
+
 import { useEffect, useState } from "react"
 
 export default function Home() {
@@ -16,8 +18,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="flex-center w-screen h-screen bg-black">
-        <ArtemsButton />
+      <div className="w-screen h-screen flex-center">
+        <SpriteAnim />
       </div>
     </>
   )
