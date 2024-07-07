@@ -11,7 +11,7 @@ export default function SpriteAnim() {
   }, [])
 
   return (
-    <div>
+    <div className="w-[500px]">
       <div className="flex-center text-[24px] font-bold">{coins}</div>
       <div className="relative z-10 overflow-hidden">
         <FlyLineAnim
@@ -40,13 +40,13 @@ function FlyLineAnim({
 }) {
   const [, forceUpdate] = useState({})
   const fliesRef = useRef([
-    { id: 0, x: 0, isEaten: false },
-    { id: 1, x: -100, isEaten: false },
-    { id: 2, x: -200, isEaten: false },
-    { id: 3, x: -300, isEaten: false },
-    { id: 4, x: -400, isEaten: false },
-    { id: 5, x: -500, isEaten: false },
-    { id: 6, x: -600, isEaten: false },
+    { id: 0, x: 600, isEaten: false },
+    { id: 1, x: 700, isEaten: false },
+    { id: 2, x: 800, isEaten: false },
+    { id: 3, x: 900, isEaten: false },
+    { id: 4, x: 1000, isEaten: false },
+    { id: 5, x: 1100, isEaten: false },
+    { id: 6, x: 1200, isEaten: false },
   ])
   const lastUpdateTimeRef = useRef(performance.now())
   const animationFrameRef = useRef<number | null>(null)
@@ -57,19 +57,19 @@ function FlyLineAnim({
 
     fliesRef.current = fliesRef.current.map((fly) => ({
       ...fly,
-      x: fly.x + 0.2 * deltaTime,
+      x: fly.x - 0.2 * deltaTime,
     }))
 
     fliesRef.current = fliesRef.current.filter(
-      (fly) => fly.x < 600 || fly.isEaten
+      (fly) => fly.x > -100 || fly.isEaten
     )
 
     fliesRef.current = fliesRef.current.map((fly) =>
-      fly.isEaten && fly.x >= 600 ? { ...fly, x: -100, isEaten: false } : fly
+      fly.isEaten && fly.x <= -100 ? { ...fly, x: 600, isEaten: false } : fly
     )
 
     while (fliesRef.current.length < 7) {
-      fliesRef.current.push({ id: Date.now(), x: -100, isEaten: false })
+      fliesRef.current.push({ id: Date.now(), x: 600, isEaten: false })
     }
 
     forceUpdate({})
@@ -237,7 +237,7 @@ function PepeEatAnim({
           setIsAnimating(true)
         }
       }}
-      className="z-10"
+      className="z-10 w-full flex-center"
     >
       <div
         ref={redDotRef}
