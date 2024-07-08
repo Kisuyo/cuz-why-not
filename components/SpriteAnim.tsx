@@ -38,8 +38,7 @@ function FlyLineAnim({
   onFlyEaten: () => void
   pepeEatFrame: number
 }) {
-  const [, forceUpdate] = useState({})
-  const fliesRef = useRef([
+  const [flies, setFlies] = useState([
     { id: 0, x: 600, isEaten: false },
     { id: 1, x: 700, isEaten: false },
     { id: 2, x: 800, isEaten: false },
@@ -48,54 +47,74 @@ function FlyLineAnim({
     { id: 5, x: 1100, isEaten: false },
     { id: 6, x: 1200, isEaten: false },
   ])
-  const lastUpdateTimeRef = useRef(performance.now())
+  const lastUpdateTimeRef = useRef(Date.now())
   const animationFrameRef = useRef<number | null>(null)
+  const isVisibleRef = useRef(true)
 
-  const updateFlies = (currentTime: number) => {
-    const deltaTime = currentTime - lastUpdateTimeRef.current
+  const updateFlies = useCallback(() => {
+    const currentTime = Date.now()
+    if (!isVisibleRef.current) return
+
+    let deltaTime = currentTime - lastUpdateTimeRef.current
     lastUpdateTimeRef.current = currentTime
 
-    fliesRef.current = fliesRef.current.map((fly) => ({
-      ...fly,
-      x: fly.x - 0.2 * deltaTime,
-    }))
+    // Limit delta time to prevent large jumps
+    deltaTime = Math.min(deltaTime, 100)
 
-    fliesRef.current = fliesRef.current.filter(
-      (fly) => fly.x > -100 || fly.isEaten
-    )
+    setFlies((prevFlies) => {
+      let newFlies = prevFlies.map((fly) => ({
+        ...fly,
+        x: fly.x - 0.2 * deltaTime,
+      }))
 
-    fliesRef.current = fliesRef.current.map((fly) =>
-      fly.isEaten && fly.x <= -100 ? { ...fly, x: 600, isEaten: false } : fly
-    )
+      newFlies = newFlies.filter((fly) => fly.x > -100 || fly.isEaten)
 
-    while (fliesRef.current.length < 7) {
-      fliesRef.current.push({ id: Date.now(), x: 600, isEaten: false })
-    }
+      newFlies = newFlies.map((fly) =>
+        fly.isEaten && fly.x <= -100 ? { ...fly, x: 600, isEaten: false } : fly
+      )
 
-    forceUpdate({})
+      while (newFlies.length < 7) {
+        newFlies.push({ id: Date.now(), x: 600, isEaten: false })
+      }
+
+      return newFlies
+    })
+
     animationFrameRef.current = requestAnimationFrame(updateFlies)
-  }
+  }, [])
 
   useEffect(() => {
+    const handleVisibilityChange = () => {
+      isVisibleRef.current = !document.hidden
+      if (isVisibleRef.current) {
+        lastUpdateTimeRef.current = Date.now()
+        animationFrameRef.current = requestAnimationFrame(updateFlies)
+      } else if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
     animationFrameRef.current = requestAnimationFrame(updateFlies)
 
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [])
+  }, [updateFlies])
 
-  const setFlies = (
-    updater: (flies: typeof fliesRef.current) => typeof fliesRef.current
-  ) => {
-    fliesRef.current = updater(fliesRef.current)
-    forceUpdate({})
-  }
+  const setFliesWrapper = useCallback(
+    (updater: (flies: typeof flies) => typeof flies) => {
+      setFlies(updater)
+    },
+    []
+  )
 
   return (
     <>
-      {fliesRef.current.map((fly) => (
+      {flies.map((fly) => (
         <FlyAnim
           key={fly.id}
           id={fly.id}
@@ -104,7 +123,7 @@ function FlyLineAnim({
           redDotRef={redDotRef}
           onFlyEaten={onFlyEaten}
           pepeEatFrame={pepeEatFrame}
-          setFlies={setFlies}
+          setFlies={setFliesWrapper}
         />
       ))}
     </>
