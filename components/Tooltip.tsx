@@ -1,34 +1,35 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion"
+import { useState } from "react"
 
 export default function Tooltip(props: {
-  children: any;
-  label: string;
-  className?: string;
+  children: any
+  label: string
+  className?: string
+  id: string
 }) {
-  const [hovered, setHovered] = useState(false);
+  const [hovered, setHovered] = useState(false)
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative w-fit"
+      className="relative inline-block w-full"
     >
-      <p className={props.className}>{props.label}</p>
+      <button className={props.className}>{props.label}</button>
 
       <AnimatePresence>
         {hovered && (
           <motion.div
+            layoutId={props.id}
             animate={{ scale: [0.9, 1.01, 1], opacity: [0, 1] }}
-            initial={{ translateX: "-50%" }}
-            exit={{ opacity: 0 }}
-            transition={{ easings: "easeOut", duration: 0.2 }}
-            className="absolute left-1/2 top-full z-10 mt-2 transform rounded-lg bg-gray-200 p-3"
+            initial={{ opacity: 0, x: 2 }}
+            exit={{ opacity: 0, x: 2 }}
+            transition={{ ease: "easeOut", duration: 0.2 }}
+            className="absolute left-full top-0 z-10 ml-2 -translate-y-1/2 rounded-lg bg-gray-200 p-1 px-3 whitespace-nowrap"
           >
-            <div className="absolute left-1/2 top-0 h-3 w-3 -translate-x-[50%] -translate-y-[50%] rotate-45 transform bg-gray-200"></div>
-            <p className="w-fit text-[12px]">{props.children}</p>
+            <p className="text-[14px]">{props.children}</p>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }

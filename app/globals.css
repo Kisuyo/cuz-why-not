@@ -14,6 +14,14 @@ body {
   overflow-x: hidden
 }
 
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: "Write a note. 📝";
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 
 .next-step-button {
 background: linear-gradient(130deg, rgba(34,121,192,1) 0%, rgba(29,111,183,1) 40%, rgba(14,76,153,1) 57%, rgba(10,67,146,1) 60%, rgba(14,76,154,1) 63%, rgba(31,114,186,1) 80%, rgba(34,121,192,1) 100%);;
